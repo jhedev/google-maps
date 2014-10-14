@@ -19,8 +19,8 @@ import Data.Text (Text)
 import Network.HTTP.Conduit
 
 
-defaultGoogleMapsConfig :: MonadIO m => APIKey -> m GoogleMapsConfig
-defaultGoogleMapsConfig key = do
+defaultConfig :: MonadIO m => APIKey -> m GoogleMapsConfig
+defaultConfig key = do
   man <- liftIO $ newManager conduitManagerSettings
   return $ GoogleMapsConfig key man
 
