@@ -1,16 +1,14 @@
-module Web.Google.Maps ( defaultGoogleMapsConfig
+module Web.Google.Maps ( defaultConfig
+                       , defaultConfigWithMan
                        , runGoogleMaps
                        --, getCoordinates
-                       , getDistanceByCar
-                       , module Web.Google.Maps.Types
-                       , module Web.Google.Maps.Geocode
-                       , module Web.Google.Maps.DistanceMatrix
-                       --, test
+                       -- , getDistanceByCar
+                       , module X
                        ) where
 
-import Web.Google.Maps.Types
-import Web.Google.Maps.Geocode
-import Web.Google.Maps.DistanceMatrix
+import Web.Google.Maps.Types as X
+import Web.Google.Maps.Geocode as X
+import Web.Google.Maps.DistanceMatrix as X
 
 import Control.Monad.Trans.Resource
 import Control.Monad.Trans.Reader
@@ -18,6 +16,9 @@ import Control.Monad.IO.Class
 import Data.Text (Text)
 import Network.HTTP.Conduit
 
+defaultConfigWithMan :: MonadIO m => APIKey -> Manager-> m GoogleMapsConfig
+defaultConfigWithMan key man = do
+  return $ GoogleMapsConfig key man
 
 defaultConfig :: MonadIO m => APIKey -> m GoogleMapsConfig
 defaultConfig key = do

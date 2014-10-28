@@ -11,6 +11,7 @@ import Web.Google.Maps.Internal
 import Web.Google.Maps.Types
 
 import Control.Applicative ((<$>), (<*>))
+import Control.Arrow (second)
 import Control.Monad (mzero)
 import Data.Aeson
 import Data.Maybe (isJust, fromJust)
@@ -79,11 +80,9 @@ instance FromJSON DistMatrixResponse where
       status <- o .: "status"
       org <- o .: "origin_addresses"
       dest <- o .: "destination_addresses"
-      rows <- (o .: "rows")
+      rows <- o .: "rows"
       els <- case rows of
-                  Array r -> do
-                    elements <- V.toList <$> V.mapM (\(Object x) -> x .: "elements") r
-                    return elements
+                  Array r ->  V.toList <$> V.mapM (\(Object x) -> x .: "elements") r
                   _ -> mzero
       return (DistMatrixResponse status org dest (Just $ Mat.fromLists els))
     parseJSON _          = mzero
@@ -103,7 +102,7 @@ distMatrixWebService :: GoogleMapsWebService DistMatrixRequest DistMatrixRespons
 distMatrixWebService = GoogleMapsWebService "distancematrix" params
   where
     params :: DistMatrixRequest -> [(String, String)]
-    params DistMatrixRequest{ .. } = map (\(x,y) -> (x, fromJust y)) $
+    params DistMatrixRequest{ .. } = map (second fromJust) $
                                      filter (\(_,y) -> isJust y)
                                       [ ("origins"        , originsMaybe origins)
                                       , ("destinations"   , destMaybe destinations)
