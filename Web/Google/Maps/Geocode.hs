@@ -15,6 +15,8 @@ import Web.Google.Maps.Internal
 import Web.Google.Maps.Types
 import Web.Google.Maps.Util
 
+import Control.Monad (mzero)
+import Data.Aeson
 import Data.Aeson.TH
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -81,9 +83,27 @@ data GeocodeResult = GeocodeResult
 
 $(deriveJSON (dropCamlCase 2) ''GeocodeResult)
 
+data GeocodeStatus = Ok
+                   | ZeroResults
+                   | OverQueryLimit
+                   | RequestDenied
+                   | InvalidRequest
+                   | UnkownError
+                   deriving (Show)
+
+instance FromJSON GeocodeStatus where
+  parseJSON o = case o of
+                  String "OK" -> return Ok
+                  String "ZERO_RESULTS" -> return ZeroResults
+                  String "OVER_QUERY_LIMIT" -> return OverQueryLimit
+                  String "REQUEST_DENIED" -> return RequestDenied
+                  String "INVLAID_REQUEST" -> return InvalidRequest
+                  String "UNKOWN_ERROR" -> return UnkownError
+                  _ -> mzero
+
 data GeocodeResponse = GeocodeResponse
   { grResults :: [GeocodeResult]
-  , grStatus :: Text
+  , grStatus :: GeocodeStatus
   } deriving (Show)
 
 $(deriveJSON (dropToLower 2) ''GeocodeResponse)
