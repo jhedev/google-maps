@@ -2,10 +2,12 @@
 module Web.Google.Maps.Geocode
        ( GeocodeRequest(..)
        , ComponentFilter(..)
+       , AddressType(..)
        , AddressComponent(..)
        , LatLong(..)
        , ViewPort(..)
        , Geometry(..)
+       , GeocodeStatus(..)
        , GeocodeResult(..)
        , GeocodeResponse(..)
        , queryGeocode
