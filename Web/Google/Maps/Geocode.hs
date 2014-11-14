@@ -50,21 +50,21 @@ data AddressComponent = AddressComponent
   , acTypes :: [Text]
   } deriving (Show)
 
-$(deriveJSON (dropCamlCase 2) ''AddressComponent)
+$(deriveFromJSON (dropCamlCase 2) ''AddressComponent)
 
 data LatLong = LatLong
   { lat :: Double
   , lng :: Double
   } deriving (Show)
 
-$(deriveJSON defaultOptions ''LatLong)
+$(deriveFromJSON defaultOptions ''LatLong)
 
 data ViewPort = ViewPort
   { vpNortheast :: LatLong
   , vpSouthwest :: LatLong
   } deriving (Show)
 
-$(deriveJSON (dropToLower 2) ''ViewPort)
+$(deriveFromJSON (dropToLower 2) ''ViewPort)
 
 data Geometry = Geometry
   { geoLocation :: LatLong
@@ -72,7 +72,7 @@ data Geometry = Geometry
   , geoViewport :: ViewPort
   } deriving (Show)
 
-$(deriveJSON (dropCamlCase 3) ''Geometry)
+$(deriveFromJSON (dropCamlCase 3) ''Geometry)
 
 data GeocodeResult = GeocodeResult
   { grAddressComponents :: [AddressComponent]
@@ -81,7 +81,7 @@ data GeocodeResult = GeocodeResult
   , grTypes :: [Text]
   } deriving (Show)
 
-$(deriveJSON (dropCamlCase 2) ''GeocodeResult)
+$(deriveFromJSON (dropCamlCase 2) ''GeocodeResult)
 
 data GeocodeStatus = Ok
                    | ZeroResults
@@ -106,7 +106,7 @@ data GeocodeResponse = GeocodeResponse
   , grStatus :: GeocodeStatus
   } deriving (Show)
 
-$(deriveJSON (dropToLower 2) ''GeocodeResponse)
+$(deriveFromJSON (dropToLower 2) ''GeocodeResponse)
 
 geocodeWebService :: GoogleMapsWebService GeocodeRequest GeocodeResponse
 geocodeWebService = GoogleMapsWebService "geocode" params
