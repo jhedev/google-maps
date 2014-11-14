@@ -21,21 +21,21 @@ import Data.Aeson.TH
 import Data.Text (Text)
 import qualified Data.Text as T
 
-data ComponentFilter = Route Text
-                     | Locality Text
-                     | AdministrativeArea Text
-                     | PostalCode Text
-                     | Country Text
+data ComponentFilter = RouteFilter Text
+                     | LocalityFilter Text
+                     | AdministrativeAreaFilter Text
+                     | PostalCodeFilter Text
+                     | CountryFilter Text
 
 instance Show ComponentFilter where
   show f = case f of
-    (Route r)              -> "route:" ++ T.unpack r
-    (Locality l)           -> "locality:" ++ T.unpack l
-    (AdministrativeArea a) -> "administrative_area:" ++ T.unpack a
-    (PostalCode p)         -> "postal_code:" ++ T.unpack p
-    (Country c)            -> "country:" ++ T.unpack c
+    (RouteFilter r)              -> "route:" ++ T.unpack r
+    (LocalityFilter l)           -> "locality:" ++ T.unpack l
+    (AdministrativeAreaFilter a) -> "administrative_area:" ++ T.unpack a
+    (PostalCodeFilter p)         -> "postal_code:" ++ T.unpack p
+    (CountryFilter c)            -> "country:" ++ T.unpack c
 
--- Geocode Requests
+-- Geocode request types
 data GeocodeRequest = GeocodeRequest
   { address    :: Text
   , components :: [ComponentFilter]
@@ -44,10 +44,95 @@ data GeocodeRequest = GeocodeRequest
   , region     :: Maybe Text
   } deriving (Show)
 
+
+-- Geocode response types
+
+data AddressType = StreetAddress
+                 | Route
+                 | Intersection
+                 | Political
+                 | Country
+                 | AdministrativeAreaLvl1
+                 | AdministrativeAreaLvl2
+                 | AdministrativeAreaLvl3
+                 | AdministrativeAreaLvl4
+                 | AdministrativeAreaLvl5
+                 | ColloquialArea
+                 | Locality
+                 | Ward
+                 | Sublocality
+                 | SublocalityLvl1
+                 | SublocalityLvl2
+                 | SublocalityLvl3
+                 | SublocalityLvl4
+                 | SublocalityLvl5
+                 | Neighborhood
+                 | Premise
+                 | Subpremise
+                 | PostalCode
+                 | NaturalFeature
+                 | Airport
+                 | Park
+                 | PointOfInterest
+                 | Floor
+                 | Establishment
+                 | Parking
+                 | PostBox
+                 | PostalTown
+                 | Room
+                 | StreetNumber
+                 | BusStation
+                 | TrainStation
+                 | TransitStation
+                 | OtherType Text
+                 deriving (Show)
+
+instance FromJSON AddressType where
+  parseJSON o = case o of
+                  String "street_address"              -> return StreetAddress
+                  String "route"                       -> return Route
+                  String "intersection"                -> return Intersection
+                  String "political"                   -> return Political
+                  String "country"                     -> return Country
+                  String "administrative_area_level_1" -> return AdministrativeAreaLvl1
+                  String "administrative_area_level_2" -> return AdministrativeAreaLvl2
+                  String "administrative_area_level_3" -> return AdministrativeAreaLvl3
+                  String "administrative_area_level_4" -> return AdministrativeAreaLvl4
+                  String "administrative_area_level_5" -> return AdministrativeAreaLvl5
+                  String "colloquial_area"             -> return ColloquialArea
+                  String "locality"                    -> return Locality
+                  String "ward"                        -> return Ward
+                  String "sublocality"                 -> return Sublocality
+                  String "sublocality_level_1"         -> return SublocalityLvl1
+                  String "sublocality_level_2"         -> return SublocalityLvl2
+                  String "sublocality_level_3"         -> return SublocalityLvl3
+                  String "sublocality_level_4"         -> return SublocalityLvl4
+                  String "sublocality_level_5"         -> return SublocalityLvl5
+                  String "neighborhood"                -> return Neighborhood
+                  String "permise"                     -> return Premise
+                  String "subpremise"                  -> return Subpremise
+                  String "postal_code"                 -> return PostalCode
+                  String "natural_feature"             -> return NaturalFeature
+                  String "airport"                     -> return Airport
+                  String "park"                        -> return Park
+                  String "point_of_interest"           -> return PointOfInterest
+                  String "floor"                       -> return Floor
+                  String "establishment"               -> return Establishment
+                  String "parking"                     -> return Parking
+                  String "post_box"                    -> return PostBox
+                  String "postal_town"                 -> return PostalTown
+                  String "room"                        -> return Room
+                  String "street_number"               -> return StreetNumber
+                  String "bus_station"                 -> return BusStation
+                  String "train_station"               -> return TrainStation
+                  String "transit_station"             -> return TransitStation
+                  String s                             -> return $ OtherType s
+                  _                                    -> mzero
+
 data AddressComponent = AddressComponent
   { acLongName :: Text
   , acShortName :: Text
-  , acTypes :: [Text]
+  , acTypes :: [AddressType]
   } deriving (Show)
 
 $(deriveFromJSON (dropCamlCase 2) ''AddressComponent)
@@ -78,7 +163,7 @@ data GeocodeResult = GeocodeResult
   { grAddressComponents :: [AddressComponent]
   , grFormattedAddress :: Text
   , grGeometry :: Geometry
-  , grTypes :: [Text]
+  , grTypes :: [AddressType]
   } deriving (Show)
 
 $(deriveFromJSON (dropCamlCase 2) ''GeocodeResult)
