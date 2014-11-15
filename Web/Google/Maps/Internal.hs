@@ -19,7 +19,7 @@ baseURL service = fromJust $ importURL $
 
 apiEndpointURL :: APIKey -> GoogleMapsWebService a b -> a -> URL
 apiEndpointURL key webservice request =
-    foldl add_param (baseURL service) $  params request
+    foldl add_param (baseURL service) $ ("key", key) : params request
   where
     service =  getServiceName webservice
     params  = getParams webservice
