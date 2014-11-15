@@ -10,6 +10,7 @@ module Web.Google.Maps.Geocode
        , GeocodeStatus(..)
        , GeocodeResult(..)
        , GeocodeResponse(..)
+       , defaultGeocodeRequest
        , queryGeocode
        ) where
 
@@ -46,6 +47,14 @@ data GeocodeRequest = GeocodeRequest
   , region     :: Maybe Text
   } deriving (Show)
 
+defaultGeocodeRequest :: Text -> GeocodeRequest
+defaultGeocodeRequest addr = GeocodeRequest
+  { address     = addr
+  , components  = []
+  , gcrbounds   = Nothing
+  , gcrlanguage = Nothing
+  , region      = Nothing
+  }
 
 -- Geocode response types
 
