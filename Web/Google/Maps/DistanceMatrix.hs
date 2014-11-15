@@ -21,6 +21,8 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
+-- Distance Matrix request data types
+
 data DistMatrixMode = Driving | Walking | Bicycling
 
 instance Show DistMatrixMode where
@@ -41,6 +43,7 @@ instance Show DistMatrixUnit where
   show Metric   = "metric"
   show Imperial = "imperial"
 
+
 data DistMatrixRequest =  DistMatrixRequest
   { origins :: [Text]
   , destinations :: [Text]
@@ -51,8 +54,23 @@ data DistMatrixRequest =  DistMatrixRequest
   , departureTime :: Maybe Integer
   } deriving (Show)
 
+
+-- Distance matrix response data types
+
+data DistMatrixElementStatus = ElementOk
+                             | ElementNotFound
+                             | ElementZeroResults
+                             deriving (Show)
+
+instance FromJSON DistMatrixElementStatus where
+  parseJSON o = case o of
+                  String "OK" -> return ElementOk
+                  String "NOT_FOUND" -> return ElementNotFound
+                  String "ZERO_RESULTS" -> return ElementZeroResults
+                  _ -> mzero
+
 data DistMatrixElement = DistMatrixElement
-  { dmeStatus    :: Text
+  { dmeStatus    :: DistMatrixElementStatus
   , dmeDurValue  :: Int
   , dmeDurText   :: Text
   , dmeDistValue :: Int
@@ -68,8 +86,26 @@ instance FromJSON DistMatrixElement where
                          <*> ((o .: "distance") >>= (.: "text"))
   parseJSON _          = mzero
 
+data DistMatrixStatus = Ok
+                      | InvalidRequest
+                      | MaxElementsExceeded
+                      | OverQueryLimit
+                      | RequestDenied
+                      | UnkownError
+                      deriving (Show)
+
+instance FromJSON DistMatrixStatus where
+  parseJSON o = case o of
+                  String "OK" -> return Ok
+                  String "INVALID_REQUEST" -> return InvalidRequest
+                  String "MAX_ELEMENTS_EXCEEDED" -> return MaxElementsExceeded
+                  String "OVER_QUERY_LIMIT" -> return OverQueryLimit
+                  String "REQUEST_DENIED" -> return RequestDenied
+                  String "UNKNOWN_ERROR" -> return UnkownError
+                  _ -> mzero
+
 data DistMatrixResponse = DistMatrixResponse
-  { dmrStatus       :: Text
+  { dmrStatus       :: DistMatrixStatus
   , dmrOrigins      :: [Text]
   , dmrDestinations :: [Text]
   , dmrMatrix       :: Maybe (Matrix DistMatrixElement)
