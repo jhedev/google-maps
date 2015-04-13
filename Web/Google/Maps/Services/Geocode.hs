@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
-module Web.Google.Maps.Geocode
+module Web.Google.Maps.Services.Geocode
        ( GeocodeRequest(..)
        , ComponentFilter(..)
        , AddressType(..)
@@ -12,15 +12,12 @@ module Web.Google.Maps.Geocode
        , GeocodeResult(..)
        , GeocodeResponse(..)
        , defaultGeocodeRequest
-       , queryGeocode
+       , webService
        ) where
 
-import Web.Google.Maps.Internal
 import Web.Google.Maps.Types
 import Web.Google.Maps.Util
 
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Reader (MonadReader)
 import Control.Monad (mzero)
 import Data.Aeson
 import Data.Aeson.TH
@@ -49,15 +46,6 @@ data GeocodeRequest = GeocodeRequest
   , gcrlanguage   :: Maybe Text
   , region     :: Maybe Text
   } deriving (Show)
-
-defaultGeocodeRequest :: Text -> GeocodeRequest
-defaultGeocodeRequest addr = GeocodeRequest
-  { address     = addr
-  , components  = []
-  , gcrbounds   = Nothing
-  , gcrlanguage = Nothing
-  , region      = Nothing
-  }
 
 -- Geocode response types
 
@@ -103,45 +91,45 @@ data AddressType = StreetAddress
 
 instance FromJSON AddressType where
   parseJSON o = case o of
-                  String "street_address"              -> return StreetAddress
-                  String "route"                       -> return Route
-                  String "intersection"                -> return Intersection
-                  String "political"                   -> return Political
-                  String "country"                     -> return Country
-                  String "administrative_area_level_1" -> return AdministrativeAreaLvl1
-                  String "administrative_area_level_2" -> return AdministrativeAreaLvl2
-                  String "administrative_area_level_3" -> return AdministrativeAreaLvl3
-                  String "administrative_area_level_4" -> return AdministrativeAreaLvl4
-                  String "administrative_area_level_5" -> return AdministrativeAreaLvl5
-                  String "colloquial_area"             -> return ColloquialArea
-                  String "locality"                    -> return Locality
-                  String "ward"                        -> return Ward
-                  String "sublocality"                 -> return Sublocality
-                  String "sublocality_level_1"         -> return SublocalityLvl1
-                  String "sublocality_level_2"         -> return SublocalityLvl2
-                  String "sublocality_level_3"         -> return SublocalityLvl3
-                  String "sublocality_level_4"         -> return SublocalityLvl4
-                  String "sublocality_level_5"         -> return SublocalityLvl5
-                  String "neighborhood"                -> return Neighborhood
-                  String "permise"                     -> return Premise
-                  String "subpremise"                  -> return Subpremise
-                  String "postal_code"                 -> return PostalCode
-                  String "natural_feature"             -> return NaturalFeature
-                  String "airport"                     -> return Airport
-                  String "park"                        -> return Park
-                  String "point_of_interest"           -> return PointOfInterest
-                  String "floor"                       -> return Floor
-                  String "establishment"               -> return Establishment
-                  String "parking"                     -> return Parking
-                  String "post_box"                    -> return PostBox
-                  String "postal_town"                 -> return PostalTown
-                  String "room"                        -> return Room
-                  String "street_number"               -> return StreetNumber
-                  String "bus_station"                 -> return BusStation
-                  String "train_station"               -> return TrainStation
-                  String "transit_station"             -> return TransitStation
-                  String s                             -> return $ OtherType s
-                  _                                    -> mzero
+    String "street_address"              -> return StreetAddress
+    String "route"                       -> return Route
+    String "intersection"                -> return Intersection
+    String "political"                   -> return Political
+    String "country"                     -> return Country
+    String "administrative_area_level_1" -> return AdministrativeAreaLvl1
+    String "administrative_area_level_2" -> return AdministrativeAreaLvl2
+    String "administrative_area_level_3" -> return AdministrativeAreaLvl3
+    String "administrative_area_level_4" -> return AdministrativeAreaLvl4
+    String "administrative_area_level_5" -> return AdministrativeAreaLvl5
+    String "colloquial_area"             -> return ColloquialArea
+    String "locality"                    -> return Locality
+    String "ward"                        -> return Ward
+    String "sublocality"                 -> return Sublocality
+    String "sublocality_level_1"         -> return SublocalityLvl1
+    String "sublocality_level_2"         -> return SublocalityLvl2
+    String "sublocality_level_3"         -> return SublocalityLvl3
+    String "sublocality_level_4"         -> return SublocalityLvl4
+    String "sublocality_level_5"         -> return SublocalityLvl5
+    String "neighborhood"                -> return Neighborhood
+    String "permise"                     -> return Premise
+    String "subpremise"                  -> return Subpremise
+    String "postal_code"                 -> return PostalCode
+    String "natural_feature"             -> return NaturalFeature
+    String "airport"                     -> return Airport
+    String "park"                        -> return Park
+    String "point_of_interest"           -> return PointOfInterest
+    String "floor"                       -> return Floor
+    String "establishment"               -> return Establishment
+    String "parking"                     -> return Parking
+    String "post_box"                    -> return PostBox
+    String "postal_town"                 -> return PostalTown
+    String "room"                        -> return Room
+    String "street_number"               -> return StreetNumber
+    String "bus_station"                 -> return BusStation
+    String "train_station"               -> return TrainStation
+    String "transit_station"             -> return TransitStation
+    String s                             -> return $ OtherType s
+    _                                    -> mzero
 
 data AddressComponent = AddressComponent
   { acLongName :: Text
@@ -207,16 +195,18 @@ data GeocodeResponse = GeocodeResponse
 
 $(deriveFromJSON (dropToLower 2) ''GeocodeResponse)
 
-geocodeWebService :: WebService GeocodeRequest GeocodeResponse
-geocodeWebService = WebService "geocode" params
+defaultGeocodeRequest :: Text -> GeocodeRequest
+defaultGeocodeRequest addr = GeocodeRequest
+  { address     = addr
+  , components  = []
+  , gcrbounds   = Nothing
+  , gcrlanguage = Nothing
+  , region      = Nothing
+  }
+
+webService :: WebService GeocodeRequest GeocodeResponse
+webService = WebService "geocode" params
   where
     params GeocodeRequest{ .. } = [ ("address", T.unpack address)
                                   , ("components", foldl (\s e -> s ++ "|" ++ e) "" $ map show components)
                                   ]
-
-queryGeocode :: ( MonadIO m
-                , MonadReader Env m
-                )
-             => GeocodeRequest
-             -> m GeocodeResponse
-queryGeocode = http geocodeWebService
