@@ -16,11 +16,14 @@ source-repository head
 
 library
   exposed-modules:      Web.Google.Maps
+
                       , Web.Google.Maps.Types
-                      , Web.Google.Maps.Geocode
-                      , Web.Google.Maps.DistanceMatrix
+                      , Web.Google.Maps.Services.DistanceMatrix
+                      , Web.Google.Maps.Services.Geocode
+
                       , Web.Google.Maps.Internal
                       , Web.Google.Maps.Util
+
   default-extensions:   OverloadedStrings
                       , TemplateHaskell
   build-depends:        base         >= 4.5   && < 5

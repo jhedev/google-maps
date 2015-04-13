@@ -1,20 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE FlexibleContexts#-}
-module Web.Google.Maps.DistanceMatrix
+module Web.Google.Maps.Services.DistanceMatrix
        ( DMRequest(..)
        , DMElement(..)
        , DMResponse (..)
-       , queryDistMatrix
-       , defaultDistMatrixRequest
+       , defaultDMRequest
+       , webService
        ) where
-
-import Web.Google.Maps.Internal
-import Web.Google.Maps.Types
 
 import Control.Arrow (second)
 import Control.Monad (mzero)
-import Control.Monad.Reader (MonadReader)
-import Control.Monad.IO.Class (MonadIO)
 import Data.Aeson
 import Data.Maybe (isJust, fromJust)
 import Data.Matrix (Matrix)
@@ -22,6 +16,8 @@ import qualified Data.Matrix as Mat
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Vector as V
+
+import Web.Google.Maps.Types
 
 -- Distance Matrix request data types
 
@@ -125,8 +121,8 @@ instance FromJSON DMResponse where
       return (DMResponse status org dest (Just $ Mat.fromLists els))
     parseJSON _          = mzero
 
-defaultDistMatrixRequest :: [Text]-> [Text] -> DMRequest
-defaultDistMatrixRequest org dest = DMRequest
+defaultDMRequest :: [Text]-> [Text] -> DMRequest
+defaultDMRequest org dest = DMRequest
   { origins       = org
   , destinations  = dest
   , mode          = Nothing
@@ -136,8 +132,8 @@ defaultDistMatrixRequest org dest = DMRequest
   , departureTime = Nothing
   }
 
-distMatrixWebService :: WebService DMRequest DMResponse
-distMatrixWebService = WebService "distancematrix" params
+webService :: WebService DMRequest DMResponse
+webService = WebService "distancematrix" params
   where
     params :: DMRequest -> [(String, String)]
     params DMRequest{ .. } = map (second fromJust) $
@@ -152,10 +148,3 @@ distMatrixWebService = WebService "distancematrix" params
         ]
     originsMaybe os = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack os)
     destMaybe    ds = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack ds)
-
-queryDistMatrix :: ( MonadIO m
-                   , MonadReader Env m
-                   )
-                => DMRequest
-                -> m DMResponse
-queryDistMatrix = http distMatrixWebService
