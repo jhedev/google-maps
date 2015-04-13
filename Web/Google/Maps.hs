@@ -1,8 +1,6 @@
-module Web.Google.Maps ( defaultConfig
-                       , defaultConfigWithMan
-                       , runGoogleMaps
-                       --, getCoordinates
-                       -- , getDistanceByCar
+module Web.Google.Maps ( mkEnv
+                       , mkEnvWithMan
+                       , runGoogleMapsT
                        , module X
                        ) where
 
@@ -10,20 +8,17 @@ import Web.Google.Maps.Types as X
 import Web.Google.Maps.Geocode as X
 import Web.Google.Maps.DistanceMatrix as X
 
-import Control.Monad.Trans.Resource
-import Control.Monad.Trans.Reader
-import Control.Monad.IO.Class
-import Data.Text (Text)
-import Network.HTTP.Conduit
+import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.Reader (runReaderT)
+import Network.HTTP.Conduit (Manager, newManager, conduitManagerSettings)
 
-defaultConfigWithMan :: MonadIO m => APIKey -> Manager-> m GoogleMapsConfig
-defaultConfigWithMan key man = do
-  return $ GoogleMapsConfig key man
+mkEnvWithMan :: APIKey -> Manager-> Env
+mkEnvWithMan = Env
 
-defaultConfig :: MonadIO m => APIKey -> m GoogleMapsConfig
-defaultConfig key = do
+mkEnv :: MonadIO m => APIKey -> m Env
+mkEnv key = do
   man <- liftIO $ newManager conduitManagerSettings
-  return $ GoogleMapsConfig key man
+  return $ Env key man
 
-runGoogleMaps :: (MonadIO m) => GoogleMapsConfig -> GoogleMaps a -> m a
-runGoogleMaps config action = liftIO $ runResourceT $ runReaderT action config
+runGoogleMapsT :: GoogleMapsT m a -> Env -> m a
+runGoogleMapsT (GoogleMapsT k) = runReaderT k

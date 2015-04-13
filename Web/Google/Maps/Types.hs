@@ -1,20 +1,29 @@
-module Web.Google.Maps.Types where
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module Web.Google.Maps.Types ( APIKey
+                             , Env (..)
+                             , GoogleMaps
+                             , GoogleMapsT (..)
+                             , WebService (..)
+                             ) where
 
-import Control.Monad.Trans.Resource (ResourceT)
 import Control.Monad.Trans.Reader (ReaderT)
+import Control.Monad.Reader.Class (MonadReader)
 import Network.HTTP.Conduit (Manager)
 
 type APIKey = String
 
-data GoogleMapsConfig = GoogleMapsConfig
-    { googleMapsApiKey :: APIKey
-    , googleMapsManager :: Manager
+data Env = Env
+    { apiKey :: APIKey
+    , manager :: Manager
     }
 
-type GoogleMaps a = ReaderT GoogleMapsConfig (ResourceT IO) a
+type GoogleMaps a = GoogleMapsT IO a
 
+newtype GoogleMapsT m a = GoogleMapsT
+  { unGoogleMaps :: ReaderT Env m a}
+  deriving (Functor, Applicative, Monad, MonadReader Env)
 
-data GoogleMapsWebService req res = GoogleMapsWebService
+data WebService req res = WebService
   { getServiceName :: String
   , getParams :: req -> [(String, String)]
   }

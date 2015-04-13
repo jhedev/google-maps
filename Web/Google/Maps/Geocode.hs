@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 module Web.Google.Maps.Geocode
        ( GeocodeRequest(..)
@@ -18,6 +19,8 @@ import Web.Google.Maps.Internal
 import Web.Google.Maps.Types
 import Web.Google.Maps.Util
 
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Reader (MonadReader)
 import Control.Monad (mzero)
 import Data.Aeson
 import Data.Aeson.TH
@@ -204,12 +207,16 @@ data GeocodeResponse = GeocodeResponse
 
 $(deriveFromJSON (dropToLower 2) ''GeocodeResponse)
 
-geocodeWebService :: GoogleMapsWebService GeocodeRequest GeocodeResponse
-geocodeWebService = GoogleMapsWebService "geocode" params
+geocodeWebService :: WebService GeocodeRequest GeocodeResponse
+geocodeWebService = WebService "geocode" params
   where
     params GeocodeRequest{ .. } = [ ("address", T.unpack address)
                                   , ("components", foldl (\s e -> s ++ "|" ++ e) "" $ map show components)
                                   ]
 
-queryGeocode :: GeocodeRequest -> GoogleMaps GeocodeResponse
-queryGeocode = queryAPI geocodeWebService
+queryGeocode :: ( MonadIO m
+                , MonadReader Env m
+                )
+             => GeocodeRequest
+             -> m GeocodeResponse
+queryGeocode = http geocodeWebService

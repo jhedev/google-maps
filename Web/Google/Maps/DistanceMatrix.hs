@@ -1,8 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts#-}
 module Web.Google.Maps.DistanceMatrix
-       ( DistMatrixRequest(..)
-       , DistMatrixElement(..)
-       , DistMatrixResponse (..)
+       ( DMRequest(..)
+       , DMElement(..)
+       , DMResponse (..)
        , queryDistMatrix
        , defaultDistMatrixRequest
        ) where
@@ -10,9 +11,10 @@ module Web.Google.Maps.DistanceMatrix
 import Web.Google.Maps.Internal
 import Web.Google.Maps.Types
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (second)
 import Control.Monad (mzero)
+import Control.Monad.Reader (MonadReader)
+import Control.Monad.IO.Class (MonadIO)
 import Data.Aeson
 import Data.Maybe (isJust, fromJust)
 import Data.Matrix (Matrix)
@@ -23,62 +25,62 @@ import qualified Data.Vector as V
 
 -- Distance Matrix request data types
 
-data DistMatrixMode = Driving | Walking | Bicycling
+data DMMode = Driving | Walking | Bicycling
 
-instance Show DistMatrixMode where
+instance Show DMMode where
   show Driving   = "driving"
   show Walking   = "walking"
   show Bicycling = "bicycling"
 
-data DistMatrixAvoid = Tolls | Highways | Ferries
+data DMAvoid = Tolls | Highways | Ferries
 
-instance Show DistMatrixAvoid where
+instance Show DMAvoid where
   show Tolls    = "tolls"
   show Highways = "highways"
   show Ferries  = "ferries"
 
-data DistMatrixUnit = Metric | Imperial
+data DMUnit = Metric | Imperial
 
-instance Show DistMatrixUnit where
+instance Show DMUnit where
   show Metric   = "metric"
   show Imperial = "imperial"
 
 
-data DistMatrixRequest =  DistMatrixRequest
+data DMRequest =  DMRequest
   { origins :: [Text]
   , destinations :: [Text]
-  , mode :: Maybe DistMatrixMode
+  , mode :: Maybe DMMode
   , language :: Maybe Text
-  , avoid :: Maybe DistMatrixAvoid
-  , unit :: Maybe DistMatrixUnit
+  , avoid :: Maybe DMAvoid
+  , unit :: Maybe DMUnit
   , departureTime :: Maybe Integer
   } deriving (Show)
 
 
 -- Distance matrix response data types
 
-data DistMatrixElementStatus = ElementOk
+data DMEStatus = ElementOk
                              | ElementNotFound
                              | ElementZeroResults
                              deriving (Show)
 
-instance FromJSON DistMatrixElementStatus where
+instance FromJSON DMEStatus where
   parseJSON o = case o of
                   String "OK" -> return ElementOk
                   String "NOT_FOUND" -> return ElementNotFound
                   String "ZERO_RESULTS" -> return ElementZeroResults
                   _ -> mzero
 
-data DistMatrixElement = DistMatrixElement
-  { dmeStatus    :: DistMatrixElementStatus
+data DMElement = DMElement
+  { dmeStatus    :: DMEStatus
   , dmeDurValue  :: Int
   , dmeDurText   :: Text
   , dmeDistValue :: Int
   , dmeDistText  :: Text
   } deriving (Show)
 
-instance FromJSON DistMatrixElement where
-  parseJSON (Object o) = DistMatrixElement
+instance FromJSON DMElement where
+  parseJSON (Object o) = DMElement
                          <$> (o .: "status")
                          <*> ((o .: "duration") >>= (.: "value"))
                          <*> ((o .: "duration") >>= (.: "text"))
@@ -104,14 +106,14 @@ instance FromJSON DistMatrixStatus where
                   String "UNKNOWN_ERROR" -> return UnkownError
                   _ -> mzero
 
-data DistMatrixResponse = DistMatrixResponse
+data DMResponse = DMResponse
   { dmrStatus       :: DistMatrixStatus
   , dmrOrigins      :: [Text]
   , dmrDestinations :: [Text]
-  , dmrMatrix       :: Maybe (Matrix DistMatrixElement)
+  , dmrMatrix       :: Maybe (Matrix DMElement)
   } deriving (Show)
 
-instance FromJSON DistMatrixResponse where
+instance FromJSON DMResponse where
     parseJSON (Object o) = do
       status <- o .: "status"
       org <- o .: "origin_addresses"
@@ -120,11 +122,11 @@ instance FromJSON DistMatrixResponse where
       els <- case rows of
                   Array r ->  V.toList <$> V.mapM (\(Object x) -> x .: "elements") r
                   _ -> mzero
-      return (DistMatrixResponse status org dest (Just $ Mat.fromLists els))
+      return (DMResponse status org dest (Just $ Mat.fromLists els))
     parseJSON _          = mzero
 
-defaultDistMatrixRequest :: [Text]-> [Text] -> DistMatrixRequest
-defaultDistMatrixRequest org dest = DistMatrixRequest
+defaultDistMatrixRequest :: [Text]-> [Text] -> DMRequest
+defaultDistMatrixRequest org dest = DMRequest
   { origins       = org
   , destinations  = dest
   , mode          = Nothing
@@ -134,22 +136,26 @@ defaultDistMatrixRequest org dest = DistMatrixRequest
   , departureTime = Nothing
   }
 
-distMatrixWebService :: GoogleMapsWebService DistMatrixRequest DistMatrixResponse
-distMatrixWebService = GoogleMapsWebService "distancematrix" params
+distMatrixWebService :: WebService DMRequest DMResponse
+distMatrixWebService = WebService "distancematrix" params
   where
-    params :: DistMatrixRequest -> [(String, String)]
-    params DistMatrixRequest{ .. } = map (second fromJust) $
-                                     filter (\(_,y) -> isJust y)
-                                      [ ("origins"        , originsMaybe origins)
-                                      , ("destinations"   , destMaybe destinations)
-                                      , ("mode"           , show `fmap` mode)
-                                      , ("language"       , show `fmap` language)
-                                      , ("avoid"          , show `fmap` avoid)
-                                      , ("unit"           , show `fmap` unit)
-                                      , ("departure_time" , show `fmap` departureTime)
-                                      ]
+    params :: DMRequest -> [(String, String)]
+    params DMRequest{ .. } = map (second fromJust) $
+        filter (\(_,y) -> isJust y)
+        [ ("origins"        , originsMaybe origins)
+        , ("destinations"   , destMaybe destinations)
+        , ("mode"           , show `fmap` mode)
+        , ("language"       , show `fmap` language)
+        , ("avoid"          , show `fmap` avoid)
+        , ("unit"           , show `fmap` unit)
+        , ("departure_time" , show `fmap` departureTime)
+        ]
     originsMaybe os = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack os)
     destMaybe    ds = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack ds)
 
-queryDistMatrix :: DistMatrixRequest -> GoogleMaps DistMatrixResponse
-queryDistMatrix = queryAPI distMatrixWebService
+queryDistMatrix :: ( MonadIO m
+                   , MonadReader Env m
+                   )
+                => DMRequest
+                -> m DMResponse
+queryDistMatrix = http distMatrixWebService
