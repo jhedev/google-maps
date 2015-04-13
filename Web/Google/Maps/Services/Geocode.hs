@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 module Web.Google.Maps.Services.Geocode
        ( GeocodeRequest(..)
@@ -40,11 +39,11 @@ instance Show ComponentFilter where
 
 -- Geocode request types
 data GeocodeRequest = GeocodeRequest
-  { address    :: Text
-  , components :: [ComponentFilter]
-  , gcrbounds     :: Maybe Text
-  , gcrlanguage   :: Maybe Text
-  , region     :: Maybe Text
+  { address     :: Text
+  , components  :: [ComponentFilter]
+  , gcrbounds   :: Maybe Text
+  , gcrlanguage :: Maybe Text
+  , region      :: Maybe Text
   } deriving (Show)
 
 -- Geocode response types
@@ -132,9 +131,9 @@ instance FromJSON AddressType where
     _                                    -> mzero
 
 data AddressComponent = AddressComponent
-  { acLongName :: Text
+  { acLongName  :: Text
   , acShortName :: Text
-  , acTypes :: [AddressType]
+  , acTypes     :: [AddressType]
   } deriving (Show)
 
 $(deriveFromJSON (dropCamlCase 2) ''AddressComponent)
@@ -154,18 +153,18 @@ data ViewPort = ViewPort
 $(deriveFromJSON (dropToLower 2) ''ViewPort)
 
 data Geometry = Geometry
-  { geoLocation :: LatLong
+  { geoLocation     :: LatLong
   , geoLocationType :: Text
-  , geoViewport :: ViewPort
+  , geoViewport     :: ViewPort
   } deriving (Show)
 
 $(deriveFromJSON (dropCamlCase 3) ''Geometry)
 
 data GeocodeResult = GeocodeResult
   { grAddressComponents :: [AddressComponent]
-  , grFormattedAddress :: Text
-  , grGeometry :: Geometry
-  , grTypes :: [AddressType]
+  , grFormattedAddress  :: Text
+  , grGeometry          :: Geometry
+  , grTypes             :: [AddressType]
   } deriving (Show)
 
 $(deriveFromJSON (dropCamlCase 2) ''GeocodeResult)
@@ -180,13 +179,13 @@ data GeocodeStatus = Ok
 
 instance FromJSON GeocodeStatus where
   parseJSON o = case o of
-                  String "OK" -> return Ok
-                  String "ZERO_RESULTS" -> return ZeroResults
-                  String "OVER_QUERY_LIMIT" -> return OverQueryLimit
-                  String "REQUEST_DENIED" -> return RequestDenied
-                  String "INVLAID_REQUEST" -> return InvalidRequest
-                  String "UNKOWN_ERROR" -> return UnkownError
-                  _ -> mzero
+    String "OK" -> return Ok
+    String "ZERO_RESULTS" -> return ZeroResults
+    String "OVER_QUERY_LIMIT" -> return OverQueryLimit
+    String "REQUEST_DENIED" -> return RequestDenied
+    String "INVLAID_REQUEST" -> return InvalidRequest
+    String "UNKOWN_ERROR" -> return UnkownError
+    _ -> mzero
 
 data GeocodeResponse = GeocodeResponse
   { grResults :: [GeocodeResult]
