@@ -179,17 +179,17 @@ data GeocodeStatus = Ok
 
 instance FromJSON GeocodeStatus where
   parseJSON o = case o of
-    String "OK" -> return Ok
-    String "ZERO_RESULTS" -> return ZeroResults
+    String "OK"               -> return Ok
+    String "ZERO_RESULTS"     -> return ZeroResults
     String "OVER_QUERY_LIMIT" -> return OverQueryLimit
-    String "REQUEST_DENIED" -> return RequestDenied
-    String "INVLAID_REQUEST" -> return InvalidRequest
-    String "UNKOWN_ERROR" -> return UnkownError
-    _ -> mzero
+    String "REQUEST_DENIED"   -> return RequestDenied
+    String "INVLAID_REQUEST"  -> return InvalidRequest
+    String "UNKOWN_ERROR"     -> return UnkownError
+    _                         -> mzero
 
 data GeocodeResponse = GeocodeResponse
   { grResults :: [GeocodeResult]
-  , grStatus :: GeocodeStatus
+  , grStatus  :: GeocodeStatus
   } deriving (Show)
 
 $(deriveFromJSON (dropToLower 2) ''GeocodeResponse)
