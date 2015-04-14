@@ -1,14 +1,17 @@
 module Web.Google.Maps ( mkEnv
                        , mkEnvWithMan
                        , runGoogleMapsT
+                       , queryGeocode
+                       , queryDistMatrix
                        , module X
                        ) where
 
 import Web.Google.Maps.Types as X
-import Web.Google.Maps.Geocode as X
-import Web.Google.Maps.DistanceMatrix as X
+import Web.Google.Maps.Internal
+import qualified Web.Google.Maps.Services.Geocode as Geo
+import qualified Web.Google.Maps.Services.DistanceMatrix as Dist
 
-import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (runReaderT)
 import Network.HTTP.Conduit (Manager, newManager, conduitManagerSettings)
 
@@ -22,3 +25,9 @@ mkEnv key = do
 
 runGoogleMapsT :: GoogleMapsT m a -> Env -> m a
 runGoogleMapsT (GoogleMapsT k) = runReaderT k
+
+queryGeocode :: (MonadIO m, MonadReader Env m) => Geo.GeocodeRequest -> m Geo.GeocodeResponse
+queryGeocode = http Geo.webService
+
+queryDistMatrix :: (MonadIO m, MonadReader Env m) => Dist.DMRequest -> m Dist.DMResponse
+queryDistMatrix = http Dist.webService
