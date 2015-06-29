@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Web.Google.Maps ( mkEnv
                        , mkEnvWithMan
                        , runGoogleMapsT
@@ -11,8 +12,8 @@ import Web.Google.Maps.Internal
 import qualified Web.Google.Maps.Services.Geocode as Geo
 import qualified Web.Google.Maps.Services.DistanceMatrix as Dist
 
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.IO.Class (liftIO, MonadIO)
+import Control.Monad.Reader (runReaderT, MonadReader)
 import Network.HTTP.Conduit (Manager, newManager, conduitManagerSettings)
 
 mkEnvWithMan :: APIKey -> Manager-> Env
