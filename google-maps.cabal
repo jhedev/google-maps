@@ -32,7 +32,7 @@ library
                       , resourcet    >= 1.1
                       , aeson        >= 0.8
                       , transformers >= 0.3
-                      , mtl          >= 2.2
+                      , mtl          >= 2.1
                       , text         >= 1.1
                       , matrix       >= 0.3
                       , vector       >= 0.10
