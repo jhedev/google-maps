@@ -7,6 +7,7 @@ module Web.Google.Maps.Services.DistanceMatrix
        , webService
        ) where
 
+import Control.Applicative ((<$>), (<*>))
 import Control.Arrow (second)
 import Control.Monad (mzero)
 import Data.Aeson
