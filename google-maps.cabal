@@ -38,3 +38,18 @@ library
                       , vector       >= 0.10
   default-language:     Haskell2010
   ghc-options:	        -Wall
+
+
+test-suite google-maps-tests
+  type:               exitcode-stdio-1.0
+  main-is:            Main.hs
+  other-modules:      Test.Geocode
+                      Test.GeocodeData
+  hs-source-dirs:     test
+  default-language:   Haskell2010
+  build-depends:      google-maps -any
+                    , base
+                    , bytestring
+                    , aeson
+                    , hspec
+                    , raw-strings-qq < 1.2
