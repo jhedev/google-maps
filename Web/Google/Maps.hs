@@ -7,21 +7,22 @@ module Web.Google.Maps ( mkEnv
                        , module X
                        ) where
 
+import Control.Monad.IO.Class    (liftIO, MonadIO)
+import Control.Monad.Reader      (runReaderT, MonadReader)
+import Network.HTTP.Client       (Manager, newManager)
+import Network.HTTP.Client.TLS   (tlsManagerSettings)
+
 import Web.Google.Maps.Types as X
 import Web.Google.Maps.Internal
 import qualified Web.Google.Maps.Services.Geocode as Geo
 import qualified Web.Google.Maps.Services.DistanceMatrix as Dist
-
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Control.Monad.Reader (runReaderT, MonadReader)
-import Network.HTTP.Conduit (Manager, newManager, conduitManagerSettings)
 
 mkEnvWithMan :: APIKey -> Manager-> Env
 mkEnvWithMan = Env
 
 mkEnv :: MonadIO m => APIKey -> m Env
 mkEnv key = do
-  man <- liftIO $ newManager conduitManagerSettings
+  man <- liftIO $ newManager tlsManagerSettings
   return $ Env key man
 
 runGoogleMapsT :: GoogleMapsT m a -> Env -> m a

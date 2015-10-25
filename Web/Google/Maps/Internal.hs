@@ -8,7 +8,7 @@ import Web.Google.Maps.Types
 import Control.Monad.Reader
 import Data.Aeson (decode, FromJSON)
 import Data.Maybe (fromJust)
-import Network.HTTP.Conduit (parseUrl, responseBody, httpLbs)
+import Network.HTTP.Client (parseUrl, responseBody, httpLbs)
 import Network.URL
 
 baseURL :: String -> URL
@@ -37,7 +37,7 @@ http webservice request = do
     config <- ask
     let key = apiKey config
     initReq <- liftIO $ parseUrl $ exportURL $ endpointURL key webservice request
-    res <- httpLbs initReq $ manager config
+    res <- liftIO $ httpLbs initReq $ manager config
     case decode $ responseBody res of
       Just result -> return result
       _ -> error "Could not decode"

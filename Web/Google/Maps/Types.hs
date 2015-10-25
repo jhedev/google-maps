@@ -9,7 +9,7 @@ module Web.Google.Maps.Types ( APIKey
 import Control.Applicative (Applicative)
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Reader.Class (MonadReader)
-import Network.HTTP.Conduit (Manager)
+import Network.HTTP.Client (Manager)
 
 type APIKey = String
 
