@@ -60,16 +60,16 @@ data DMRequest =  DMRequest
 -- Distance matrix response data types
 
 data DMEStatus = ElementOk
-                             | ElementNotFound
-                             | ElementZeroResults
-                             deriving (Show)
+               | ElementNotFound
+               | ElementZeroResults
+               deriving (Show)
 
 instance FromJSON DMEStatus where
   parseJSON o = case o of
-                  String "OK" -> return ElementOk
-                  String "NOT_FOUND" -> return ElementNotFound
-                  String "ZERO_RESULTS" -> return ElementZeroResults
-                  _ -> mzero
+    String "OK" -> return ElementOk
+    String "NOT_FOUND" -> return ElementNotFound
+    String "ZERO_RESULTS" -> return ElementZeroResults
+    _ -> mzero
 
 data DMElement = DMElement
   { dmeStatus    :: DMEStatus
@@ -81,11 +81,11 @@ data DMElement = DMElement
 
 instance FromJSON DMElement where
   parseJSON (Object o) = DMElement
-                         <$> (o .: "status")
-                         <*> ((o .: "duration") >>= (.: "value"))
-                         <*> ((o .: "duration") >>= (.: "text"))
-                         <*> ((o .: "distance") >>= (.: "value"))
-                         <*> ((o .: "distance") >>= (.: "text"))
+    <$> (o .: "status")
+    <*> ((o .: "duration") >>= (.: "value"))
+    <*> ((o .: "duration") >>= (.: "text"))
+    <*> ((o .: "distance") >>= (.: "value"))
+    <*> ((o .: "distance") >>= (.: "text"))
   parseJSON _          = mzero
 
 data DistMatrixStatus = Ok
@@ -98,13 +98,13 @@ data DistMatrixStatus = Ok
 
 instance FromJSON DistMatrixStatus where
   parseJSON o = case o of
-                  String "OK" -> return Ok
-                  String "INVALID_REQUEST" -> return InvalidRequest
-                  String "MAX_ELEMENTS_EXCEEDED" -> return MaxElementsExceeded
-                  String "OVER_QUERY_LIMIT" -> return OverQueryLimit
-                  String "REQUEST_DENIED" -> return RequestDenied
-                  String "UNKNOWN_ERROR" -> return UnkownError
-                  _ -> mzero
+    String "OK" -> return Ok
+    String "INVALID_REQUEST" -> return InvalidRequest
+    String "MAX_ELEMENTS_EXCEEDED" -> return MaxElementsExceeded
+    String "OVER_QUERY_LIMIT" -> return OverQueryLimit
+    String "REQUEST_DENIED" -> return RequestDenied
+    String "UNKNOWN_ERROR" -> return UnkownError
+    _ -> mzero
 
 data DMResponse = DMResponse
   { dmrStatus       :: DistMatrixStatus
@@ -116,12 +116,12 @@ data DMResponse = DMResponse
 instance FromJSON DMResponse where
     parseJSON (Object o) = do
       status <- o .: "status"
-      org <- o .: "origin_addresses"
-      dest <- o .: "destination_addresses"
-      rows <- o .: "rows"
-      els <- case rows of
-                  Array r ->  V.toList <$> V.mapM (\(Object x) -> x .: "elements") r
-                  _ -> mzero
+      org    <- o .: "origin_addresses"
+      dest   <- o .: "destination_addresses"
+      rows   <- o .: "rows"
+      els    <- case rows of
+        Array r ->  V.toList <$> V.mapM (\(Object x) -> x .: "elements") r
+        _ -> mzero
       return (DMResponse status org dest (Just $ Mat.fromLists els))
     parseJSON _          = mzero
 
