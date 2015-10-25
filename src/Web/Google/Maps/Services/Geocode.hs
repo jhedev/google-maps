@@ -33,6 +33,7 @@ data ComponentFilter = RouteFilter Text
                      | AdministrativeAreaFilter Text
                      | PostalCodeFilter Text
                      | CountryFilter Text
+                     deriving (Eq)
 
 instance Show ComponentFilter where
   show f = case f of
@@ -49,7 +50,7 @@ data GeocodeRequest = GeocodeRequest
   , gcrbounds   :: Maybe Text
   , gcrlanguage :: Maybe Text
   , region      :: Maybe Text
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 -- Geocode response types
 
@@ -91,7 +92,7 @@ data AddressType = StreetAddress
                  | TrainStation
                  | TransitStation
                  | OtherType Text
-                 deriving (Show)
+                 deriving (Show, Eq)
 
 instance FromJSON AddressType where
   parseJSON o = case o of
@@ -139,21 +140,21 @@ data AddressComponent = AddressComponent
   { acLongName  :: Text
   , acShortName :: Text
   , acTypes     :: [AddressType]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON (dropCamlCase 2) ''AddressComponent)
 
 data LatLong = LatLong
   { lat :: Double
   , lng :: Double
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON defaultOptions ''LatLong)
 
 data ViewPort = ViewPort
   { vpNortheast :: LatLong
   , vpSouthwest :: LatLong
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON (dropToLower 2) ''ViewPort)
 
@@ -161,7 +162,7 @@ data Geometry = Geometry
   { geoLocation     :: LatLong
   , geoLocationType :: Text
   , geoViewport     :: ViewPort
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON (dropCamlCase 3) ''Geometry)
 
@@ -170,7 +171,7 @@ data GeocodeResult = GeocodeResult
   , grFormattedAddress  :: Text
   , grGeometry          :: Geometry
   , grTypes             :: [AddressType]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON (dropCamlCase 2) ''GeocodeResult)
 
@@ -180,7 +181,7 @@ data GeocodeStatus = Ok
                    | RequestDenied
                    | InvalidRequest
                    | UnkownError
-                   deriving (Show)
+                   deriving (Show, Eq)
 
 instance FromJSON GeocodeStatus where
   parseJSON o = case o of
@@ -195,7 +196,7 @@ instance FromJSON GeocodeStatus where
 data GeocodeResponse = GeocodeResponse
   { grResults :: [GeocodeResult]
   , grStatus  :: GeocodeStatus
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveFromJSON (dropToLower 2) ''GeocodeResponse)
 
