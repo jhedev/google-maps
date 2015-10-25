@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Web.Google.Maps ( mkEnv
                        , mkEnvWithMan
-                       , runGoogleMapsT
+                       , runGoogleMaps
                        , queryGeocode
                        , queryDistMatrix
                        , module X
@@ -25,11 +25,15 @@ mkEnv key = do
   man <- liftIO $ newManager tlsManagerSettings
   return $ Env key man
 
-runGoogleMapsT :: GoogleMapsT m a -> Env -> m a
-runGoogleMapsT (GoogleMapsT k) = runReaderT k
+runGoogleMaps :: MonadIO m => Env -> GoogleMapsT m a -> m a
+runGoogleMaps env action = runReaderT (runGoogleMapsT action) env
 
-queryGeocode :: (MonadIO m, MonadReader Env m) => Geo.GeocodeRequest -> m Geo.GeocodeResponse
+queryGeocode :: (MonadIO m, MonadReader Env m)
+             => Geo.GeocodeRequest
+             -> m Geo.GeocodeResponse
 queryGeocode = http Geo.webService
 
-queryDistMatrix :: (MonadIO m, MonadReader Env m) => Dist.DMRequest -> m Dist.DMResponse
+queryDistMatrix :: (MonadIO m, MonadReader Env m)
+                => Dist.DMRequest
+                -> m Dist.DMResponse
 queryDistMatrix = http Dist.webService

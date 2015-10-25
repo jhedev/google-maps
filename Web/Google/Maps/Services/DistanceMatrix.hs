@@ -18,6 +18,7 @@ import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mat
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Vector as V
 
 import Web.Google.Maps.Types
@@ -141,15 +142,15 @@ webService = WebService "distancematrix" params
     params :: DMRequest -> [(ByteString, Maybe ByteString)]
     params DMRequest{ .. } =
         filter (\(_,y) -> isJust y)
-        [ ("origins"        , BSC.pack <$> originsMaybe origins)
-        , ("destinations"   , BSC.pack <$> destMaybe destinations)
+        [ ("origins"        , toParam origins)
+        , ("destinations"   , toParam destinations)
         , ("mode"           , fmap toBS mode)
         , ("language"       , fmap toBS language)
         , ("avoid"          , fmap toBS avoid)
         , ("unit"           , fmap toBS unit)
         , ("departure_time" , fmap toBS departureTime)
         ]
-    originsMaybe os = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack os)
-    destMaybe    ds = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack ds)
+    toParam :: [Text] -> Maybe ByteString
+    toParam = Just . T.encodeUtf8 . T.intercalate "|"
     toBS :: Show a => a -> ByteString
     toBS = BSC.pack . show

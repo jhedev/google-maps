@@ -23,6 +23,7 @@ import Control.Monad (mzero)
 import Data.Aeson
 import Data.Aeson.TH
 import qualified Data.ByteString.Char8 as BSC
+import Data.List (intercalate)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -212,6 +213,6 @@ webService = WebService "geocode" params
   where
     params GeocodeRequest{ .. } = [ ("address", Just $ T.encodeUtf8 address)
                                   , ("components", Just $ BSC.pack $
-                                                   foldl (\s e -> s ++ "|" ++ e)
-                                                   "" $ map show components)
+                                                   intercalate "|" $
+                                                   map show components)
                                   ]
