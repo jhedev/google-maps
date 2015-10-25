@@ -3,6 +3,7 @@
 module Web.Google.Maps.Services.DistanceMatrix
        ( DMRequest(..)
        , DMElement(..)
+       , DMStatus(..)
        , DMResponse (..)
        , defaultDMRequest
        , webService
@@ -25,21 +26,21 @@ import Web.Google.Maps.Types
 
 -- Distance Matrix request data types
 
-data DMMode = Driving | Walking | Bicycling
+data DMMode = Driving | Walking | Bicycling deriving (Eq)
 
 instance Show DMMode where
   show Driving   = "driving"
   show Walking   = "walking"
   show Bicycling = "bicycling"
 
-data DMAvoid = Tolls | Highways | Ferries
+data DMAvoid = Tolls | Highways | Ferries deriving (Eq)
 
 instance Show DMAvoid where
   show Tolls    = "tolls"
   show Highways = "highways"
   show Ferries  = "ferries"
 
-data DMUnit = Metric | Imperial
+data DMUnit = Metric | Imperial deriving (Eq)
 
 instance Show DMUnit where
   show Metric   = "metric"
@@ -54,7 +55,7 @@ data DMRequest =  DMRequest
   , avoid :: Maybe DMAvoid
   , unit :: Maybe DMUnit
   , departureTime :: Maybe Integer
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 
 -- Distance matrix response data types
@@ -62,7 +63,7 @@ data DMRequest =  DMRequest
 data DMEStatus = ElementOk
                | ElementNotFound
                | ElementZeroResults
-               deriving (Show)
+               deriving (Show, Eq)
 
 instance FromJSON DMEStatus where
   parseJSON o = case o of
@@ -77,7 +78,7 @@ data DMElement = DMElement
   , dmeDurText   :: Text
   , dmeDistValue :: Int
   , dmeDistText  :: Text
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 instance FromJSON DMElement where
   parseJSON (Object o) = DMElement
@@ -88,15 +89,15 @@ instance FromJSON DMElement where
     <*> ((o .: "distance") >>= (.: "text"))
   parseJSON _          = mzero
 
-data DistMatrixStatus = Ok
-                      | InvalidRequest
-                      | MaxElementsExceeded
-                      | OverQueryLimit
-                      | RequestDenied
-                      | UnkownError
-                      deriving (Show)
+data DMStatus = Ok
+              | InvalidRequest
+              | MaxElementsExceeded
+              | OverQueryLimit
+              | RequestDenied
+              | UnkownError
+              deriving (Show, Eq)
 
-instance FromJSON DistMatrixStatus where
+instance FromJSON DMStatus where
   parseJSON o = case o of
     String "OK" -> return Ok
     String "INVALID_REQUEST" -> return InvalidRequest
@@ -107,11 +108,11 @@ instance FromJSON DistMatrixStatus where
     _ -> mzero
 
 data DMResponse = DMResponse
-  { dmrStatus       :: DistMatrixStatus
+  { dmrStatus       :: DMStatus
   , dmrOrigins      :: [Text]
   , dmrDestinations :: [Text]
   , dmrMatrix       :: Maybe (Matrix DMElement)
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 instance FromJSON DMResponse where
     parseJSON (Object o) = do
