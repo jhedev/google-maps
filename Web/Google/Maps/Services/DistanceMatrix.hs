@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module Web.Google.Maps.Services.DistanceMatrix
        ( DMRequest(..)
@@ -8,10 +9,11 @@ module Web.Google.Maps.Services.DistanceMatrix
        ) where
 
 import Control.Applicative ((<$>), (<*>))
-import Control.Arrow (second)
 import Control.Monad (mzero)
 import Data.Aeson
-import Data.Maybe (isJust, fromJust)
+import Data.Maybe (isJust)
+import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as BSC
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mat
 import Data.Text (Text)
@@ -136,16 +138,18 @@ defaultDMRequest org dest = DMRequest
 webService :: WebService DMRequest DMResponse
 webService = WebService "distancematrix" params
   where
-    params :: DMRequest -> [(String, String)]
-    params DMRequest{ .. } = map (second fromJust) $
+    params :: DMRequest -> [(ByteString, Maybe ByteString)]
+    params DMRequest{ .. } =
         filter (\(_,y) -> isJust y)
-        [ ("origins"        , originsMaybe origins)
-        , ("destinations"   , destMaybe destinations)
-        , ("mode"           , show `fmap` mode)
-        , ("language"       , show `fmap` language)
-        , ("avoid"          , show `fmap` avoid)
-        , ("unit"           , show `fmap` unit)
-        , ("departure_time" , show `fmap` departureTime)
+        [ ("origins"        , BSC.pack <$> originsMaybe origins)
+        , ("destinations"   , BSC.pack <$> destMaybe destinations)
+        , ("mode"           , fmap toBS mode)
+        , ("language"       , fmap toBS language)
+        , ("avoid"          , fmap toBS avoid)
+        , ("unit"           , fmap toBS unit)
+        , ("departure_time" , fmap toBS departureTime)
         ]
     originsMaybe os = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack os)
     destMaybe    ds = Just (foldl (\s e -> s ++ "|" ++ e) "" $ map T.unpack ds)
+    toBS :: Show a => a -> ByteString
+    toBS = BSC.pack . show

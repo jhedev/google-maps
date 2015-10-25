@@ -9,9 +9,10 @@ module Web.Google.Maps.Types ( APIKey
 import Control.Applicative (Applicative)
 import Control.Monad.Trans.Reader (ReaderT)
 import Control.Monad.Reader.Class (MonadReader)
+import Data.ByteString (ByteString)
 import Network.HTTP.Client (Manager)
 
-type APIKey = String
+type APIKey = ByteString
 
 data Env = Env
     { apiKey :: APIKey
@@ -26,5 +27,5 @@ newtype GoogleMapsT m a = GoogleMapsT
 
 data WebService req res = WebService
   { getServiceName :: String
-  , getParams :: req -> [(String, String)]
+  , getParams :: req -> [(ByteString, Maybe ByteString)]
   }

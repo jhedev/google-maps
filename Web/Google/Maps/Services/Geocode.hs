@@ -20,8 +20,10 @@ import Web.Google.Maps.Util
 import Control.Monad (mzero)
 import Data.Aeson
 import Data.Aeson.TH
+import qualified Data.ByteString.Char8 as BSC
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 data ComponentFilter = RouteFilter Text
                      | LocalityFilter Text
@@ -206,6 +208,8 @@ defaultGeocodeRequest addr = GeocodeRequest
 webService :: WebService GeocodeRequest GeocodeResponse
 webService = WebService "geocode" params
   where
-    params GeocodeRequest{ .. } = [ ("address", T.unpack address)
-                                  , ("components", foldl (\s e -> s ++ "|" ++ e) "" $ map show components)
+    params GeocodeRequest{ .. } = [ ("address", Just $ T.encodeUtf8 address)
+                                  , ("components", Just $ BSC.pack $
+                                                   foldl (\s e -> s ++ "|" ++ e)
+                                                   "" $ map show components)
                                   ]
