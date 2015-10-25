@@ -24,8 +24,6 @@ library
                       , Web.Google.Maps.Internal
                       , Web.Google.Maps.Util
 
-  default-extensions:   OverloadedStrings
-                      , TemplateHaskell
   build-depends:        aeson        >= 0.8
                       , base         >= 4.5   && < 5
                       , bytestring

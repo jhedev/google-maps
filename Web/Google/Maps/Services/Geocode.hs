@@ -1,4 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Web.Google.Maps.Services.Geocode
        ( GeocodeRequest(..)
        , ComponentFilter(..)
